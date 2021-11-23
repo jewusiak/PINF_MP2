@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <malloc.h>
-#include <process.h>
+#include <limits.h>
 
 typedef struct pnt {
-    int w0,   //stan po symbolu 0
-    w1,     //stan po symbolu 1
-    type;   //0 - stan, 1 - stan akceptowalny
+    int w0,     //stan po symbolu 0
+    w1,         //stan po symbolu 1
+    type;       //0 - stan, 1 - stan akceptowalny
 } pnt_t;
 
 
@@ -31,12 +31,10 @@ int *run(int *sequence, int seqLength, int actState, pnt_t *availStates) {
 }
 
 void WriteDiagram(int *sequenceResult, int *sequence, int seqLength) {
-    printf("\033[0;31m");
     printf("  q%d", *sequenceResult);
     for (int i = 0; i < seqLength; i++)
         printf("  -- %d -->  q%d", sequence[i], sequenceResult[i + 1]);
-
-    printf("\033[0m");
+    printf("\n");
 }
 
 
@@ -48,39 +46,42 @@ int main() {
     int actState = 3; //stan początkowy q3
     int seqLength = 0;
     int *sequence = malloc(seqLength * sizeof *sequence);
-       
+
 
     FILE *p = stdin;
 
     if (p == NULL) {
-        printf("Nie można otworzyć wejścia!\n");
+        printf("Nie mozna otworzyć wejscia!\n");
         return 1;
     }
     char c;
     while ((c = fgetc(p)) != 10)
         if (c != 48 && c != 49) {
-            printf("Ciąg zawiera błędne znaki. Możliwe znaki: 0, 1.\n");
+            printf("Ciag zawiera bladne znaki. Mozliwe znaki: 0, 1.\n");
             return 1;
-        } else
+        } else if(seqLength>=INT_MAX) {
+            printf("Wpisano zbyt duzo znakow. Maksymalna ilosc znakow to: %d.\n", INT_MAX);
+            return 1;
+        }
+        else
             (sequence = realloc(sequence, ++seqLength * sizeof *sequence))[seqLength - 1] = c - 48;
-
-
 
 
     int *sequenceResult = run(sequence, seqLength, actState, states);//długością jest seqLength+1
 
 
     if (*sequenceResult == -1) {
-        printf("Niepowodzenie działania maszyny!\n");
+        printf("Niepowodzenie dzialania maszyny!\n");
         return 1;
     } else if (states[sequenceResult[seqLength]].type == 1) {
-        printf("Zaakceptowano ciąg!\n");
+        printf("Zaakceptowano ciag!\n");
         WriteDiagram(sequenceResult, sequence, seqLength);
     } else if (seqLength == 0) {
-        printf("Nie wpisano znaków!\n");
+        printf("Nie wpisano znakow!\n");
         return 1;
     } else {
-        printf("Ciąg nie został zaakceptowany!\n");
+        printf("Ciag nie zostal zaakceptowany!\n");
+        WriteDiagram(sequenceResult, sequence, seqLength);
         return 1;
     }
 
